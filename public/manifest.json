@@ -1,0 +1,37 @@
+{
+  "name": "RugQuest - Token Launch Simulator",
+  "short_name": "RugQuest",
+  "description": "Be the shadowy founder of your own memecoin. Rug or moon, fame or prison - it's your choice, ser.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#A855F7",
+  "icons": [
+    {
+      "src": "/images/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "portrait",
+  "categories": ["games", "entertainment", "finance", "crypto"],
+  "screenshots": [
+    {
+      "src": "/images/office.png",
+      "sizes": "768x1365",
+      "type": "image/png",
+      "label": "RugQuest Office Scene"
+    },
+    {
+      "src": "/images/moon.png",
+      "sizes": "768x1365",
+      "type": "image/png", 
+      "label": "RugQuest Moon Scene"
+    }
+  ]
+}
