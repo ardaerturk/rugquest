@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
  * @returns The farcaster manifest for the frame
  */
 export async function getFarcasterManifest() {
-  let frameName = "RugQuest - Simulator";
+  let frameName = "RugQuest";
   let noindex = false;
   const appUrl = env.NEXT_PUBLIC_URL;
   if (appUrl.includes("localhost")) {
@@ -36,13 +36,13 @@ export async function getFarcasterManifest() {
       splashBackgroundColor: "#1F1A29", // Dark purple/black
       webhookUrl: `${appUrl}/api/webhook`,
       // Metadata https://github.com/farcasterxyz/miniapps/discussions/191
-      subtitle: "Crypto token simulator with meme vibes", // 30 characters, no emojis or special characters, short description under app name
-      description: "Be the shadowy founder of your own memecoin. Rug or moon, fame or prison - it's your choice, ser. Reply Guy is ready to help you pump... or dump!", // 170 characters, no emojis or special characters, promotional message displayed on Mini App Page
+      subtitle: "Token Simulator", // 30 characters, no emojis or special characters, short description under app name
+      description: "Be the shadowy founder of your own memecoin", // 170 characters, no emojis or special characters, promotional message displayed on Mini App Page
       primaryCategory: "games",
       tags: ["crypto", "defi", "game", "memecoin", "simulator"], // up to 5 tags, filtering/search tags
       tagline: "Pump it or rug it - your choice, ser!", // 30 characters, marketing tagline should be punchy and descriptive
       ogTitle: `${frameName}`, // 30 characters, app name + short tag, Title case, no emojis
-      ogDescription: "Launch your token with Reply Guy. Pump it to the moon or rug pull and run - no SEC in the metaverse!", // 100 characters, summarize core benefits in 1-2 lines
+      ogDescription: "Launch your token with Reply Guy. Pump it to the moon or rug pull and run!", // 100 characters, summarize core benefits in 1-2 lines
       screenshotUrls: [
         // 1284 x 2778, visual previews of the app, max 3 screenshots
         `${appUrl}/images/office.png`,
