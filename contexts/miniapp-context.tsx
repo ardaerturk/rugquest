@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { sdk } from '@farcaster/frame-sdk';
+import { MiniKit } from '@worldcoin/minikit-js';
 
 // --- RugQuest Specific Types ---
 export type SceneKey = 'office' | 'club' | 'yacht' | 'moon' | 'prison' | 'void';
@@ -376,12 +377,33 @@ export function MiniAppProvider({ children }: { children: ReactNode }) {
     }
   }, [miniKitContext?.client?.added, handleAddFrame, isFrameReady]);
 
+  // Function to get username from Worldcoin MiniKit
+  const getWorldcoinUsername = useCallback(async () => {
+    try {
+      // Check if MiniKit is installed and available
+      if (!MiniKit || !MiniKit.isInstalled()) {
+        return null;
+      }
+      
+      // Access user information from Worldcoin MiniKit
+      const user = MiniKit.user;
+      if (user?.username) {
+        return user.username.toUpperCase();
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error accessing Worldcoin MiniKit:", error);
+      return null;
+    }
+  }, []);
+
   // Function to get username from Farcaster SDK context
   const getFarcasterUsername = useCallback(async () => {
     try {
       // Try to get username from Farcaster SDK
       if (!sdk || !sdk.context) {
-        return "TOKEN";
+        return null;
       }
       
       const farcasterContext = await sdk.context;
@@ -394,13 +416,38 @@ export function MiniAppProvider({ children }: { children: ReactNode }) {
         return user.displayName.toUpperCase();
       }
       
-      // Default fallback name
-      return "TOKEN";
+      return null;
     } catch (error) {
       console.error("Error accessing Farcaster context:", error);
-      return "TOKEN";
+      return null;
     }
   }, []);
+
+  // Enhanced function to get username from either platform
+  const getUsername = useCallback(async () => {
+    try {
+      // First try Worldcoin MiniKit
+      const worldcoinUsername = await getWorldcoinUsername();
+      if (worldcoinUsername) {
+        console.log("Using Worldcoin username:", worldcoinUsername);
+        return worldcoinUsername;
+      }
+
+      // Then try Farcaster
+      const farcasterUsername = await getFarcasterUsername();
+      if (farcasterUsername) {
+        console.log("Using Farcaster username:", farcasterUsername);
+        return farcasterUsername;
+      }
+
+      // Default fallback
+      console.log("No username found, using TOKEN");
+      return "TOKEN";
+    } catch (error) {
+      console.error("Error getting username:", error);
+      return "TOKEN";
+    }
+  }, [getWorldcoinUsername, getFarcasterUsername]);
 
   // State for custom token name input
   const [customTokenName, setCustomTokenName] = useState("");
@@ -415,11 +462,11 @@ export function MiniAppProvider({ children }: { children: ReactNode }) {
       });
       
       if (!rugQuestState.gameInitialized && !isInitializingRef.current) {
-        const username = await getFarcasterUsername();
+        const username = await getUsername();
         console.log("Auto-initializing game with username:", username);
         
         if (username !== "TOKEN") {
-          // We have a Farcaster username, use it
+          // We have a username from either platform, use it
           initializeRugQuest(username);
         } else {
           // We don't have a username, show input prompt
@@ -429,7 +476,7 @@ export function MiniAppProvider({ children }: { children: ReactNode }) {
     };
     
     initializeGame();
-  }, [getFarcasterUsername, initializeRugQuest, rugQuestState.gameInitialized]); // Added proper dependencies
+  }, [getUsername, initializeRugQuest, rugQuestState.gameInitialized]); // Updated dependency
 
   return (
     <MiniAppContext.Provider
