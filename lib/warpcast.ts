@@ -41,9 +41,9 @@ export async function getFarcasterManifest() {
       description: "Be the shadowy founder of your own memecoin. Rug or moon, fame or prison - it's your choice, ser. Reply Guy is ready to help you pump or dump!", // 170 characters max, promotional message for Mini App Page
       primaryCategory: "games", // From pre-defined categories: games, social, finance, utility, etc.
       tags: ["crypto", "token", "simulator", "memecoin", "game"], // up to 5 tags for filtering/search, no spaces, singular form
-      tagline: "Pump it or rug it - your choice!", // 30 characters max, punchy marketing tagline
+      tagline: "Token Launch Simulator", // 30 characters max, punchy marketing tagline
       ogTitle: "RugQuest - Token Simulator", // 30 characters max, app name + short tag, Title case, no emojis
-      ogDescription: "Launch your token with Reply Guy. Pump to moon or rug pull and run - no SEC in metaverse!", // 100 characters max, summarize core benefits in 1-2 lines
+      ogDescription: "Pump to moon or rug pull and run!", // 100 characters max, summarize core benefits in 1-2 lines
       
       // Visual Assets
       screenshotUrls: [
