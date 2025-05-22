@@ -6,25 +6,25 @@ const appUrl = env.NEXT_PUBLIC_URL;
 
 const frame = {
   version: "next",
-  imageUrl: `${appUrl}/images/feed.png`,
+  imageUrl: `${appUrl}/images/office.png`,
   button: {
-    title: "Launch App",
+    title: "Start Pumping",
     action: {
       type: "launch_frame",
-      name: "Mini-app Starter",
+      name: "RugQuest",
       url: appUrl,
       splashImageUrl: `${appUrl}/images/splash.png`,
-      splashBackgroundColor: "#ffffff",
+      splashBackgroundColor: "#1F1A29",
     },
   },
 };
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Mini-app Starter",
+    title: "RugQuest",
     openGraph: {
-      title: "Mini-app Starter",
-      description: "A starter for Farcastermini-apps",
+      title: "RugQuest - Token Launch Simulator",
+      description: "Be the shadowy founder of your own memecoin. Rug or moon, fame or prison - it's your choice, ser!",
     },
     other: {
       "fc:frame": JSON.stringify(frame),

@@ -28,29 +28,33 @@ export async function getFarcasterManifest() {
     frame: {
       version: "1",
       name: frameName,
-      iconUrl: `${appUrl}/images/reply-guy.png`,
+      iconUrl: `${appUrl}/images/reply-guy.png`, // 1024x1024 PNG icon
       homeUrl: appUrl,
       imageUrl: `${appUrl}/images/office.png`,
       buttonTitle: `Start Pumping`,
       splashImageUrl: `${appUrl}/images/splash.png`,
       splashBackgroundColor: "#1F1A29", // Dark purple/black
       webhookUrl: `${appUrl}/api/webhook`,
-      // Metadata https://github.com/farcasterxyz/miniapps/discussions/191
-      subtitle: "Token Simulator", // 30 characters, no emojis or special characters, short description under app name
-      description: "Be the shadowy founder of your own memecoin", // 170 characters, no emojis or special characters, promotional message displayed on Mini App Page
-      primaryCategory: "games",
-      tags: ["crypto", "defi", "game", "memecoin", "simulator"], // up to 5 tags, filtering/search tags
-      tagline: "Pump it or rug it - your choice, ser!", // 30 characters, marketing tagline should be punchy and descriptive
-      ogTitle: `${frameName}`, // 30 characters, app name + short tag, Title case, no emojis
-      ogDescription: "Launch your token with Reply Guy. Pump it to the moon or rug pull and run!", // 100 characters, summarize core benefits in 1-2 lines
+      
+      // Updated Metadata for Farcaster Mini App Store - Following Official Spec
+      subtitle: "Token Launch Simulator", // 30 characters max, no emojis, short description under app name
+      description: "Be the shadowy founder of your own memecoin. Rug or moon, fame or prison - it's your choice, ser. Reply Guy is ready to help you pump or dump!", // 170 characters max, promotional message for Mini App Page
+      primaryCategory: "games", // From pre-defined categories: games, social, finance, utility, etc.
+      tags: ["crypto", "token", "simulator", "memecoin", "game"], // up to 5 tags for filtering/search, no spaces, singular form
+      tagline: "Pump it or rug it - your choice!", // 30 characters max, punchy marketing tagline
+      ogTitle: "RugQuest - Token Simulator", // 30 characters max, app name + short tag, Title case, no emojis
+      ogDescription: "Launch your token with Reply Guy. Pump to moon or rug pull and run - no SEC in metaverse!", // 100 characters max, summarize core benefits in 1-2 lines
+      
+      // Visual Assets
       screenshotUrls: [
-        // 1284 x 2778, visual previews of the app, max 3 screenshots
-        `${appUrl}/images/office.png`,
-        `${appUrl}/images/club.png`,
-        `${appUrl}/images/moon.png`,
+        // Portrait screenshots 1284 x 2778, max 3 screenshots showing core value/magic moments
+        `${appUrl}/images/office.png`, // Starting scene - shows the premise
+        `${appUrl}/images/club.png`,  // Success scene - shows progression
+        `${appUrl}/images/moon.png`,  // Victory scene - shows aspiration
       ],
-      heroImageUrl: `${appUrl}/images/office.png`, // 1200 x 630px (1.91:1), promotional display image on top of the mini app store
-      ogImageUrl: `${appUrl}/images/office.png`, // 1200 x 630px (1.91:1), promotional image, same as app hero image
+      heroImageUrl: `${appUrl}/images/office.png`, // 1200 x 630px (1.91:1), promotional display image on mini app store
+      ogImageUrl: `${appUrl}/images/office.png`, // 1200 x 630px (1.91:1), promotional image for sharing (same as hero)
+      
       noindex: noindex,
     },
   };
