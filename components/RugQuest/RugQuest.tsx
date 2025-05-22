@@ -16,7 +16,7 @@ const WRITE_YOUR_OWN_OPTION = "✍️ Write your own"; // Same as defined in min
 // TODO: Implement "Write your own" input field logic
 
 const RugQuest = () => {
-  const { rugQuestState, processPlayerChoice, initializeRugQuest } = useMiniApp();
+  const { rugQuestState, processPlayerChoice, initializeRugQuest, resetRugQuest } = useMiniApp();
   const {
     tokenName,
     price,
@@ -178,16 +178,16 @@ const RugQuest = () => {
   // Handler for token name input
   const handleSubmitTokenName = (e: React.FormEvent) => {
     e.preventDefault();
-    if (tokenInputValue.trim()) {
-      initializeRugQuest(tokenInputValue.trim().toUpperCase());
-      setShowTokenInput(false);
-    }
+    // Use the entered value, or fall back to DEGENBUTT if empty
+    const tokenName = tokenInputValue.trim() || "DEGENBUTT";
+    initializeRugQuest(tokenName.toUpperCase());
+    setShowTokenInput(false);
   };
 
   // Show token input form if needed
   if (showTokenInput) {
     return (
-      <div className="flex flex-col h-screen bg-black text-white items-center justify-center font-pixelated p-4">
+      <div className="flex flex-col h-[100vh] w-[100vw] fixed inset-0 bg-black text-white items-center justify-center font-pixelated p-4 overflow-hidden">
         <div className="w-full max-w-xs bg-gray-800 p-6 rounded-md shadow-lg border-2 border-purple-500">
           <h2 className="text-2xl mb-4 text-center">NAME YOUR TOKEN</h2>
           <p className="mb-4 text-sm text-center">What will your memecoin be called?</p>
@@ -197,10 +197,13 @@ const RugQuest = () => {
               value={tokenInputValue}
               onChange={(e) => setTokenInputValue(e.target.value)}
               maxLength={10}
-              placeholder="DEGEN"
+              placeholder="DEGENBUTT"
+              autoFocus
               className="w-full bg-gray-900 text-white p-2 mb-4 rounded text-center uppercase font-pixelated border border-purple-400"
             />
-            <Button type="submit" className="w-full">Launch Your Token</Button>
+            <button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white p-2 rounded font-pixelated transition-colors">
+              LAUNCH TOKEN
+            </button>
           </form>
         </div>
       </div>
@@ -210,7 +213,7 @@ const RugQuest = () => {
   // Loading screen
   if (!gameInitialized) {
     return (
-      <div className="flex flex-col h-screen bg-gray-900 text-white items-center justify-center font-pixelated">
+      <div className="flex flex-col h-[100vh] w-[100vw] fixed inset-0 bg-gray-900 text-white items-center justify-center font-pixelated overflow-hidden">
         <div className="animate-pulse">
           Loading RugQuest...
         </div>
@@ -305,7 +308,7 @@ const RugQuest = () => {
   // Game over screen
   if (gameOver) {
     return (
-      <div ref={gameScreenRef} className="flex flex-col h-screen bg-gray-900 text-white items-center justify-center font-pixelated p-4 text-center">
+      <div ref={gameScreenRef} className="flex flex-col h-[100vh] w-[100vw] max-h-[100vh] fixed inset-0 bg-gray-900 text-white items-center justify-center font-pixelated p-4 text-center overflow-hidden">
         <h2 className="text-2xl mb-4">Game Over!</h2>
         <p className="text-lg mb-4">{endGameMessage || "The rug has been pulled or something."}</p>
         <p className="mb-2">Final Price: ${price.toFixed(4)}</p>
@@ -315,7 +318,7 @@ const RugQuest = () => {
         <Button onClick={handleShareToFarcaster} disabled={isSharing} className="mb-2">
           {isSharing ? "Sharing..." : "Share to Farcaster ⌐◨-◨"}
         </Button>
-        <Button onClick={() => initializeRugQuest(tokenName)} disabled={isSharing}>Play Again?</Button>
+        <Button onClick={resetRugQuest} disabled={isSharing}>Play Again?</Button>
         
         {/* About button */}
         <button 
@@ -336,7 +339,7 @@ const RugQuest = () => {
   return (
     <div 
       ref={gameScreenRef} 
-      className="flex flex-col h-screen text-white items-center justify-between font-pixelated overflow-hidden p-4 bg-cover bg-center"
+      className="flex flex-col h-[100vh] w-[100vw] fixed inset-0 text-white items-center justify-between font-pixelated overflow-hidden p-4 bg-cover bg-center"
       style={{ backgroundImage: `url(${sceneBackgrounds[currentScene] || sceneBackgrounds.office})` }}
     >
       {/* Top Info Area: Price and Chart */}

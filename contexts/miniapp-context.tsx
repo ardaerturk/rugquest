@@ -49,39 +49,66 @@ interface MiniAppContextType {
 
   // RugQuest Game State and Actions
   rugQuestState: RugQuestState;
-  initializeRugQuest: (username?: string) => void;
+  initializeRugQuest: (username?: string, forceRestart?: boolean) => void;
   processPlayerChoice: (choice: string, freeText?: string) => Promise<void>; // Renamed for clarity
   resetRugQuest: () => void;
 }
 
 const WRITE_YOUR_OWN_OPTION = "✍️ Write your own";
 
-// Array of possible initial messages with only one option (Launch $USERNAME)
+// Array of first messages that explain the game concept in a degen crypto way
 const initialMessages = [
-  {
-    message: `GM boss, $USERNAME is ready to deploy. LFG! 🚀`,
-    options: ["Launch $USERNAME token"]
-  },
-  {
-    message: `$USERNAME contract deployed. Ready to rug... erm, I mean MOON! 🔥`,
-    options: ["Launch $USERNAME token"]
-  },
-  {
-    message: `Chads and degens ready to ape, boss. $USERNAME to the moon? 💎`,
-    options: ["Launch $USERNAME token"]
-  },
-  {
-    message: `Website's up, Discord's pumpin'. $USERNAME token locked and loaded! 👾`,
-    options: ["Launch $USERNAME token"]
-  }
+  // Hype/FOMO Tone
+  `Boss! $USERNAME contract just deployed! Influencers already DM'ing for presale spots! Chart's ready to EXPLODE! What's our first move? 🚀`,
+  
+  // Conspiratorial Tone
+  `Psst...boss, $USERNAME's live on-chain! SEC ain't looking our way yet. VCs want in but I told 'em we're keepin' it degen. Ready to cook those charts? 😈`,
+  
+  // Nervous Energy
+  `SIR! $USERNAME just went live! Already got Discord spamming 'wen moon'! Need your call on next move before these apes get restless! 💸`,
+  
+  // Calculated/Strategic
+  `Market analysis complete, boss. $USERNAME deployment successful. Initial liquidity pool shallow—perfect for volatility. Ready for pump phase? Advisable actions listed below. 📊`,
+  
+  // Unhinged/Chaotic
+  `AAAAAH IT'S HAPPENING! $USERNAME IS LIVE!! The degen hordes are STARVING for gainz! Chart's flatter than your NFTs! WHAT DO WE DO BOSS?! 🔥`,
+  
+  // Straight-shooter
+  `$USERNAME's live, boss. Your call—we pump it clean, or we do the ol' deploy-and-destroy. Either way, I'm with you 'til the SEC knocks. What's the play? 💼`
 ];
+
+// Initial options that appear after the first message
+const initialOptions = [
+  "Deploy LP", 
+  "Shill on Twitter", 
+  "Buy First Bags",
+  "✍️ Write your own" // Adding the write your own option to initial options
+];
+
+// Function to generate a random memorable starting price
+const getRandomStartingPrice = (): number => {
+  const priceOptions = [
+    0.0420, // Meme number
+    0.0069, // Meme number
+    0.1337, // Leet
+    1.6180, // Golden ratio
+    3.1415, // Pi
+    4.2069, // Combined meme
+    6.9420, // Combined meme
+    8.0085, // "BOOBS" upside down
+    42.069, // Large meme
+    0.0001 * Math.floor(Math.random() * 50000 + 1000) // Random value between 0.1 and 5.0
+  ];
+  
+  return priceOptions[Math.floor(Math.random() * priceOptions.length)];
+};
 
 const initialRugQuestState: RugQuestState = {
   tokenName: 'TOKEN',
-  price: 0.0100,
+  price: getRandomStartingPrice(),
   priceChangePercent: 0,
   isPricePositive: true,
-  chartData: [0.0100],
+  chartData: [getRandomStartingPrice()],
   currentMessage: "Connecting to the degenverse...", // Initial loading message
   currentOptions: [], // Options will be fetched
   currentScene: 'office',
@@ -241,7 +268,7 @@ export function MiniAppProvider({ children }: { children: ReactNode }) {
         // Force an ending if turn count is too high, even if AI didn't end it
         // Pick a random ending based on price
         const price = llmResponse.price;
-        const initialPrice = 0.0100;
+        const initialPrice = getRandomStartingPrice();
         
         if (price >= initialPrice * 10) {
           // High price = moon ending
@@ -284,11 +311,12 @@ export function MiniAppProvider({ children }: { children: ReactNode }) {
     }
   }, [rugQuestState, updateStateFromLLM]);
 
-  const initializeRugQuest = useCallback((username: string = "USERNAME") => {
-    console.log("initializeRugQuest called with username:", username);
+  const initializeRugQuest = useCallback((username: string = "USERNAME", forceRestart: boolean = false) => {
+    console.log("initializeRugQuest called with username:", username, "forceRestart:", forceRestart);
     
     // Check if we're already initialized or initializing - be extra defensive
-    if (rugQuestState.gameInitialized || isInitializingRef.current) {
+    // Skip this check if forceRestart is true (for "Play Again" functionality)
+    if (!forceRestart && (rugQuestState.gameInitialized || isInitializingRef.current)) {
       console.log("Game already initialized or initializing - skipping");
       return;
     }
@@ -298,31 +326,29 @@ export function MiniAppProvider({ children }: { children: ReactNode }) {
     
     // Select a random initial message
     const randomIndex = Math.floor(Math.random() * initialMessages.length);
-    const initialMessageObj = initialMessages[randomIndex];
+    const initialMessage = initialMessages[randomIndex];
     
-    const initialPrice = 0.0100;
+    const initialPrice = getRandomStartingPrice();
     const baseState = {
       ...initialRugQuestState,
       tokenName: username,
       price: initialPrice,
       chartData: [initialPrice],
-      currentMessage: initialMessageObj.message.replace(/\$USERNAME/g, `$${username}`),
+      currentMessage: initialMessage.replace(/\$USERNAME/g, `$${username}`),
       gameInitialized: true,
       gameOver: false,
       endGameMessage: '',
       replyGuyMood: 'talk' as ReplyGuyMood, // Set to 'talk' since this is an active message
-      currentOptions: initialMessageObj.options.map(opt => opt.replace(/\$USERNAME/g, `$${username}`)),
+      currentOptions: initialOptions,
       turnCount: 0, // Initialize turn count
     };
     
-    console.log("Setting initial rugQuestState with hardcoded message");
+    console.log("Setting initial rugQuestState with randomized message");
     setRugQuestState(baseState);
-    
-    // No immediate API call - will happen when user selects "Launch $USERNAME"
   }, [rugQuestState.gameInitialized]); // Removed processPlayerChoice dependency
 
   const resetRugQuest = useCallback(() => {
-    initializeRugQuest(rugQuestState.tokenName);
+    initializeRugQuest(rugQuestState.tokenName, true); // Pass true to force restart
   }, [initializeRugQuest, rugQuestState.tokenName]);
 
   const handleAddFrame = useCallback(async () => {

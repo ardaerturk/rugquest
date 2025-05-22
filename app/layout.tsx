@@ -10,6 +10,16 @@ const pressStart2P = Press_Start_2P({
   variable: '--font-press-start-2p',
 });
 
+// Configure viewport for better mobile experience
+const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  height: 'device-height'
+};
+
 export const metadata: Metadata = {
   title: "RugQuest - Token Launch Simulator",
   description: "Be the shadowy founder of your own memecoin. Rug or moon, fame or prison - it's your choice, ser. 🚀💸",
@@ -43,14 +53,14 @@ export const metadata: Metadata = {
     title: "RugQuest - Token Launch Simulator",
     description: "Be the shadowy founder of your own memecoin. Rug or moon, fame or prison - it's your choice, ser.",
     images: ["/images/reply-guy.png"],
-    creator: "@ardaa",
+    creator: "@ardaddy",
   },
   // Manifest
   manifest: "/manifest.json",
   applicationName: "RugQuest",
   keywords: ["crypto", "memecoin", "token", "simulation", "game", "farcaster", "web3"],
-  creator: "@ardaa",
-  authors: [{ name: "Arda Erturk", url: "https://twitter.com/ardaa" }],
+  creator: "@ardaddy",
+  authors: [{ name: "ardaddy", url: "https://twitter.com/ardaerturk" }],
 };
 
 export default function RootLayout({
@@ -60,7 +70,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${pressStart2P.variable} font-sans`}> {/* Use font-sans as default, pixelated will be applied specifically */}
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+      </head>
+      <body className={`${inter.variable} ${pressStart2P.variable} font-sans overflow-hidden touch-manipulation`}> {/* Prevent scrolling and improve touch */}
         <Providers>{children}</Providers>
       </body>
     </html>
