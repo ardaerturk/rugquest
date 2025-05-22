@@ -378,19 +378,12 @@ export function MiniAppProvider({ children }: { children: ReactNode }) {
   }, [miniKitContext?.client?.added, handleAddFrame, isFrameReady]);
 
   // Function to get username from Worldcoin MiniKit
-  const getWorldcoinUsername = useCallback(async () => {
+  const getWorldcoinUsername = useCallback(() => {
     try {
-      // Check if MiniKit is installed and available
-      if (!MiniKit || !MiniKit.isInstalled()) {
-        return null;
+      // Direct access to MiniKit user data
+      if (MiniKit?.user?.username) {
+        return MiniKit.user.username.toUpperCase();
       }
-      
-      // Access user information from Worldcoin MiniKit
-      const user = MiniKit.user;
-      if (user?.username) {
-        return user.username.toUpperCase();
-      }
-      
       return null;
     } catch (error) {
       console.error("Error accessing Worldcoin MiniKit:", error);
@@ -426,8 +419,8 @@ export function MiniAppProvider({ children }: { children: ReactNode }) {
   // Enhanced function to get username from either platform
   const getUsername = useCallback(async () => {
     try {
-      // First try Worldcoin MiniKit
-      const worldcoinUsername = await getWorldcoinUsername();
+      // First try Worldcoin MiniKit (now synchronous)
+      const worldcoinUsername = getWorldcoinUsername();
       if (worldcoinUsername) {
         console.log("Using Worldcoin username:", worldcoinUsername);
         return worldcoinUsername;

@@ -75,14 +75,17 @@ const RugQuest = () => {
   useEffect(() => {
     const checkPlatform = async () => {
       try {
+        // Check if we have a Farcaster context with user info
         if (sdk && sdk.context) {
           const context = await sdk.context;
-          setIsInFarcaster(!!context?.user);
+          const isFarcaster = !!context?.user;
+          setIsInFarcaster(isFarcaster);
+          console.log('Farcaster detection result:', isFarcaster);
         } else {
           setIsInFarcaster(false);
         }
       } catch (error) {
-        console.log('Not in Farcaster frame or SDK not available');
+        console.log('Not in Farcaster frame or SDK not available:', error);
         setIsInFarcaster(false);
       }
     };
@@ -108,9 +111,9 @@ const RugQuest = () => {
     setWriteOwnText("");
   };
 
-  // Twitter sharing function
-  const handleShareToTwitter = async () => {
-    if (!gameScreenRef.current || isSharing) return;
+  // Unified share function that works for both platforms
+  const handleShare = async () => {
+    if (isSharing) return;
     
     setIsSharing(true);
     try {
@@ -138,114 +141,45 @@ const RugQuest = () => {
           mainMessage = `Game over: $${tokenName} final price $${price.toFixed(4)}!`;
         }
       
-        // Cleaner format, just message and game tag
         shareText = `"${mainMessage}"\n\nPlaying RugQuest. #RugQuest`;
       } else {
-        // Mid-game share with cleaner formatting
+        // Mid-game share
         const priceChange = isPricePositive ? `+${priceChangePercent.toFixed(2)}%` : `${priceChangePercent.toFixed(2)}%`;
         
-        // Include custom "Write your own" text if it's available
         const messageToShare = showWriteOwnInput && writeOwnText.trim() 
           ? writeOwnText.trim() 
           : currentMessage;
         
-        // Format options as a bulleted list
         const optionsList = currentOptions
-          .filter(opt => opt !== WRITE_YOUR_OWN_OPTION) // Filter out the "Write your own" option
+          .filter(opt => opt !== WRITE_YOUR_OWN_OPTION)
           .map(opt => `- ${opt}`)
           .join("\n");
           
-        // Format: Message, then options list, then game status
-        shareText = `"${messageToShare}"\n\n` + 
-                    `${optionsList}\n\n` + 
-                    `Playing RugQuest at $${price.toFixed(4)} (${priceChange}). #RugQuest`;
+        shareText = `"${messageToShare}"\n\n${optionsList}\n\nPlaying RugQuest at $${price.toFixed(4)} (${priceChange}). #RugQuest`;
       }
 
-      // For Twitter, we'll open the Twitter compose URL
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
-      window.open(twitterUrl, '_blank');
-      
-    } catch (error) {
-      console.error("Error sharing to Twitter:", error);
-      alert("Could not share to Twitter. Try again later.");
-    } finally {
-      setIsSharing(false);
-    }
-  };
-
-  // Custom share function (for mid-game sharing)
-  const handleShareGame = async () => {
-    if (!gameScreenRef.current || isSharing) return;
-    
-    setIsSharing(true);
-    try {
-      const canvas = await html2canvas(gameScreenRef.current, {
-        useCORS: true,
-        backgroundColor: '#111827',
-      });
-      
-      const imageDataUrl = canvas.toDataURL('image/png');
-      
-      // Create a share message based on current game state
-      let shareText = "";
-      
-      if (gameOver) {
-        // Get emoji based on ending scene
-        const endingEmoji = currentScene === 'prison' ? '🔪' : 
-                          currentScene === 'yacht' ? '✈️' : 
-                          currentScene === 'moon' ? '🌕' : 
-                          currentScene === 'void' ? '💀' : '🚀';
-      
-        // Main message content based on ending                    
-        let mainMessage = "";
-        if (currentScene === 'prison') {
-          mainMessage = `I rugged $${tokenName} at $${price.toFixed(4)} ${endingEmoji}`;
-        } else if (currentScene === 'yacht') {
-          mainMessage = `Skipped town with half the $${tokenName} bags ${endingEmoji}`;
-        } else if (currentScene === 'moon') {
-          mainMessage = `Accidentally went legit—$${tokenName} to the moon ${endingEmoji}`;
-        } else if (currentScene === 'void') {
-          mainMessage = `RugQuest speed-ran $${tokenName} to zero ${endingEmoji}`;
-        } else {
-          mainMessage = `Game over: $${tokenName} final price $${price.toFixed(4)}!`;
-        }
-      
-        // Cleaner format, just message and game tag
-        shareText = `"${mainMessage}"\n\nPlaying RugQuest. #RugQuest`;
-      } else {
-        // Mid-game share with cleaner formatting
-        const priceChange = isPricePositive ? `+${priceChangePercent.toFixed(2)}%` : `${priceChangePercent.toFixed(2)}%`;
-        
-        // Include custom "Write your own" text if it's available
-        const messageToShare = showWriteOwnInput && writeOwnText.trim() 
-          ? writeOwnText.trim() 
-          : currentMessage;
-        
-        // Format options as a bulleted list
-        const optionsList = currentOptions
-          .filter(opt => opt !== WRITE_YOUR_OWN_OPTION) // Filter out the "Write your own" option
-          .map(opt => `- ${opt}`)
-          .join("\n");
-          
-        // Format: Message, then options list, then game status
-        shareText = `"${messageToShare}"\n\n` + 
-                    `${optionsList}\n\n` + 
-                    `Playing RugQuest at $${price.toFixed(4)} (${priceChange}). #RugQuest`;
-      }
-      
       if (isInFarcaster) {
-        // Create a blob from the data URL
+        // For Farcaster, try to use SDK with screenshot
+        if (!gameScreenRef.current) {
+          alert(`Sharing to Farcaster: ${shareText}`);
+          return;
+        }
+        
+        const canvas = await html2canvas(gameScreenRef.current, {
+          useCORS: true,
+          backgroundColor: '#111827',
+        });
+        
+        const imageDataUrl = canvas.toDataURL('image/png');
         const blob = await (await fetch(imageDataUrl)).blob();
         
         try {
-          // Try to use Farcaster SDK to share
           if (sdk && sdk.actions) {
             await sdk.actions.composeCast({
               text: shareText,
               embeds: [URL.createObjectURL(blob)]
             });
           } else {
-            // Fallback
             alert(`Sharing to Farcaster: ${shareText}`);
           }
         } catch (error) {
@@ -253,13 +187,13 @@ const RugQuest = () => {
           alert("Could not share to Farcaster. Try again later.");
         }
       } else {
-        // For Twitter, we'll open the Twitter compose URL
+        // Default to Twitter for all other platforms (including World App)
         const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
         window.open(twitterUrl, '_blank');
       }
     } catch (error) {
-      console.error("Error generating screenshot:", error);
-      alert("Could not generate screenshot for sharing.");
+      console.error("Error sharing:", error);
+      alert("Could not share. Try again later.");
     } finally {
       setIsSharing(false);
     }
@@ -311,75 +245,6 @@ const RugQuest = () => {
     );
   }
 
-  // Moved addFrame and handleShareToFarcaster inside the component scope
-  const { addFrame } = useMiniApp(); 
-
-  const handleShareToFarcaster = async () => {
-    if (!gameScreenRef.current || isSharing) return;
-    setIsSharing(true);
-    try {
-      const canvas = await html2canvas(gameScreenRef.current, {
-        useCORS: true, // If you have external images/fonts
-        backgroundColor: '#111827', // Match bg-gray-900
-        // It might be necessary to target a more specific element if the whole screen isn't desired
-      });
-      const imageDataUrl = canvas.toDataURL('image/png');
-      console.log("Screenshot Data URL:", imageDataUrl.substring(0,100) + "..."); // Log part of it
-
-      // Construct share text based on game ending with cleaner format
-      let shareText = "";
-      
-      // Get emoji based on ending scene
-      const endingEmoji = currentScene === 'prison' ? '🔪' : 
-                          currentScene === 'yacht' ? '✈️' : 
-                          currentScene === 'moon' ? '🌕' : 
-                          currentScene === 'void' ? '💀' : '🚀';
-      
-      // Main message content based on ending                    
-      let mainMessage = "";
-      if (currentScene === 'prison') {
-        mainMessage = `I rugged $${tokenName} at $${price.toFixed(4)} ${endingEmoji}`;
-      } else if (currentScene === 'yacht') {
-        mainMessage = `Skipped town with half the $${tokenName} bags ${endingEmoji}`;
-      } else if (currentScene === 'moon') {
-        mainMessage = `Accidentally went legit—$${tokenName} to the moon ${endingEmoji}`;
-      } else if (currentScene === 'void') {
-        mainMessage = `RugQuest speed-ran $${tokenName} to zero ${endingEmoji}`;
-      } else {
-        mainMessage = `Game over: $${tokenName} final price $${price.toFixed(4)}!`;
-      }
-      
-      // Cleaner format, just message and game tag
-      shareText = `"${mainMessage}"\n\nPlaying RugQuest. #RugQuest`;
-      
-      console.log("Share Text:", shareText);
-
-      // Create a blob from the data URL
-      const blob = await (await fetch(imageDataUrl)).blob();
-      
-      try {
-        // Try to use Farcaster SDK to share
-        if (sdk && sdk.actions) {
-          await sdk.actions.composeCast({
-            text: shareText,
-            embeds: [URL.createObjectURL(blob)]
-          });
-        } else {
-          // Fallback
-          alert(`Sharing to Farcaster: ${shareText}`);
-        }
-      } catch (error) {
-        console.error("Error sharing to Farcaster:", error);
-        alert("Could not share to Farcaster. Try again later.");
-      }
-
-    } catch (error) {
-      console.error("Error generating screenshot or sharing:", error);
-      alert("Could not generate screenshot for sharing.");
-    } finally {
-      setIsSharing(false);
-    }
-  };
 
   // About modal component - rewritten for better z-index and event handling
   const AboutModal = () => (
@@ -413,7 +278,7 @@ const RugQuest = () => {
             <Sparkline data={chartData} width={128} height={48} />
         </div>
         <Button 
-          onClick={isInFarcaster ? handleShareToFarcaster : handleShareToTwitter} 
+          onClick={handleShare} 
           disabled={isSharing} 
           className="mb-2"
         >
@@ -500,7 +365,7 @@ const RugQuest = () => {
           {/* Share button - hidden during loading states */}
           {replyGuyMood !== 'idle' && (
             <button 
-              onClick={handleShareGame}
+              onClick={handleShare}
               disabled={isSharing}
               className="absolute -top-10 right-0 text-sm bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded shadow-lg"
             >
