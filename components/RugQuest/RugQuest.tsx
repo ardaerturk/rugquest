@@ -41,6 +41,7 @@ const RugQuest = () => {
   const [showAboutModal, setShowAboutModal] = useState(false); // State for about modal
   const [tokenInputValue, setTokenInputValue] = useState(""); // For custom token name input
   const [showTokenInput, setShowTokenInput] = useState(false); // For token name input modal
+  const [isInFarcaster, setIsInFarcaster] = useState(false); // Platform detection
 
   // Handle About modal toggle with debugging
   const handleToggleAboutModal = () => {
@@ -70,6 +71,24 @@ const RugQuest = () => {
     }
   }, [gameInitialized]);
 
+  // Platform detection - check if we're in Farcaster frame
+  useEffect(() => {
+    const checkPlatform = async () => {
+      try {
+        if (sdk && sdk.context) {
+          const context = await sdk.context;
+          setIsInFarcaster(!!context?.user);
+        } else {
+          setIsInFarcaster(false);
+        }
+      } catch (error) {
+        console.log('Not in Farcaster frame or SDK not available');
+        setIsInFarcaster(false);
+      }
+    };
+    checkPlatform();
+  }, []);
+
   const handleOptionClick = (option: string) => {
     if (gameOver) return;
 
@@ -87,6 +106,71 @@ const RugQuest = () => {
     processPlayerChoice("✍️ Write your own", writeOwnText.trim());
     setShowWriteOwnInput(false);
     setWriteOwnText("");
+  };
+
+  // Twitter sharing function
+  const handleShareToTwitter = async () => {
+    if (!gameScreenRef.current || isSharing) return;
+    
+    setIsSharing(true);
+    try {
+      // Create share text based on current game state
+      let shareText = "";
+      
+      if (gameOver) {
+        // Get emoji based on ending scene
+        const endingEmoji = currentScene === 'prison' ? '🔪' : 
+                          currentScene === 'yacht' ? '✈️' : 
+                          currentScene === 'moon' ? '🌕' : 
+                          currentScene === 'void' ? '💀' : '🚀';
+      
+        // Main message content based on ending                    
+        let mainMessage = "";
+        if (currentScene === 'prison') {
+          mainMessage = `I rugged $${tokenName} at $${price.toFixed(4)} ${endingEmoji}`;
+        } else if (currentScene === 'yacht') {
+          mainMessage = `Skipped town with half the $${tokenName} bags ${endingEmoji}`;
+        } else if (currentScene === 'moon') {
+          mainMessage = `Accidentally went legit—$${tokenName} to the moon ${endingEmoji}`;
+        } else if (currentScene === 'void') {
+          mainMessage = `RugQuest speed-ran $${tokenName} to zero ${endingEmoji}`;
+        } else {
+          mainMessage = `Game over: $${tokenName} final price $${price.toFixed(4)}!`;
+        }
+      
+        // Cleaner format, just message and game tag
+        shareText = `"${mainMessage}"\n\nPlaying RugQuest. #RugQuest`;
+      } else {
+        // Mid-game share with cleaner formatting
+        const priceChange = isPricePositive ? `+${priceChangePercent.toFixed(2)}%` : `${priceChangePercent.toFixed(2)}%`;
+        
+        // Include custom "Write your own" text if it's available
+        const messageToShare = showWriteOwnInput && writeOwnText.trim() 
+          ? writeOwnText.trim() 
+          : currentMessage;
+        
+        // Format options as a bulleted list
+        const optionsList = currentOptions
+          .filter(opt => opt !== WRITE_YOUR_OWN_OPTION) // Filter out the "Write your own" option
+          .map(opt => `- ${opt}`)
+          .join("\n");
+          
+        // Format: Message, then options list, then game status
+        shareText = `"${messageToShare}"\n\n` + 
+                    `${optionsList}\n\n` + 
+                    `Playing RugQuest at $${price.toFixed(4)} (${priceChange}). #RugQuest`;
+      }
+
+      // For Twitter, we'll open the Twitter compose URL
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+      window.open(twitterUrl, '_blank');
+      
+    } catch (error) {
+      console.error("Error sharing to Twitter:", error);
+      alert("Could not share to Twitter. Try again later.");
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   // Custom share function (for mid-game sharing)
@@ -149,23 +233,29 @@ const RugQuest = () => {
                     `Playing RugQuest at $${price.toFixed(4)} (${priceChange}). #RugQuest`;
       }
       
-      // Create a blob from the data URL
-      const blob = await (await fetch(imageDataUrl)).blob();
-      
-      try {
-        // Try to use Farcaster SDK to share
-        if (sdk) {
-          await sdk.actions.composeCast({
-            text: shareText,
-            embeds: [URL.createObjectURL(blob)]
-          });
-        } else {
-          // Fallback
-          alert(`Sharing to Farcaster: ${shareText}`);
+      if (isInFarcaster) {
+        // Create a blob from the data URL
+        const blob = await (await fetch(imageDataUrl)).blob();
+        
+        try {
+          // Try to use Farcaster SDK to share
+          if (sdk && sdk.actions) {
+            await sdk.actions.composeCast({
+              text: shareText,
+              embeds: [URL.createObjectURL(blob)]
+            });
+          } else {
+            // Fallback
+            alert(`Sharing to Farcaster: ${shareText}`);
+          }
+        } catch (error) {
+          console.error("Error sharing to Farcaster:", error);
+          alert("Could not share to Farcaster. Try again later.");
         }
-      } catch (error) {
-        console.error("Error sharing to Farcaster:", error);
-        alert("Could not share to Farcaster. Try again later.");
+      } else {
+        // For Twitter, we'll open the Twitter compose URL
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+        window.open(twitterUrl, '_blank');
       }
     } catch (error) {
       console.error("Error generating screenshot:", error);
@@ -264,17 +354,24 @@ const RugQuest = () => {
       
       console.log("Share Text:", shareText);
 
-      // TODO: Actual Farcaster sharing.
-      // `addFrame` is for adding a frame to a cast. For sharing an image + text,
-      // you might need a different approach, possibly involving uploading the image
-      // to a service (e.g., via a backend endpoint) and then composing a cast
-      // with an `embeds: [{ url: 'image_url_here' }]` and the text.
-      // Or, if OnchainKit provides a direct way to open composer with image, use that.
-      // For now, we'll just log. A simple text share could be:
-      // await addFrame({ url: `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}`});
-      // This would open composer with text, but not the image.
-      alert(`Sharing to Farcaster (simulated):\nText: ${shareText}\nImage: ${imageDataUrl.substring(0,60)}...`);
-
+      // Create a blob from the data URL
+      const blob = await (await fetch(imageDataUrl)).blob();
+      
+      try {
+        // Try to use Farcaster SDK to share
+        if (sdk && sdk.actions) {
+          await sdk.actions.composeCast({
+            text: shareText,
+            embeds: [URL.createObjectURL(blob)]
+          });
+        } else {
+          // Fallback
+          alert(`Sharing to Farcaster: ${shareText}`);
+        }
+      } catch (error) {
+        console.error("Error sharing to Farcaster:", error);
+        alert("Could not share to Farcaster. Try again later.");
+      }
 
     } catch (error) {
       console.error("Error generating screenshot or sharing:", error);
@@ -315,8 +412,12 @@ const RugQuest = () => {
         <div className="mb-4">
             <Sparkline data={chartData} width={128} height={48} />
         </div>
-        <Button onClick={handleShareToFarcaster} disabled={isSharing} className="mb-2">
-          {isSharing ? "Sharing..." : "Share to Farcaster ⌐◨-◨"}
+        <Button 
+          onClick={isInFarcaster ? handleShareToFarcaster : handleShareToTwitter} 
+          disabled={isSharing} 
+          className="mb-2"
+        >
+          {isSharing ? "Sharing..." : `Share to ${isInFarcaster ? 'Farcaster ⌐◨-◨' : 'Twitter 🐦'}`}
         </Button>
         <Button onClick={resetRugQuest} disabled={isSharing}>Play Again?</Button>
         
@@ -403,7 +504,7 @@ const RugQuest = () => {
               disabled={isSharing}
               className="absolute -top-10 right-0 text-sm bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded shadow-lg"
             >
-              {isSharing ? "Sharing..." : "Share 📸"}
+              {isSharing ? "Sharing..." : `Share ${isInFarcaster ? '⌐◨-◨' : '🐦'}`}
             </button>
           )}
         </div>
