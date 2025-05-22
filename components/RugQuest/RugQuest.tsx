@@ -155,7 +155,7 @@ const RugQuest = () => {
           .map(opt => `- ${opt}`)
           .join("\n");
           
-        shareText = `"${messageToShare}"\n\n${optionsList}\n\nPlaying RugQuest at $${price.toFixed(4)} (${priceChange}). #RugQuest`;
+        shareText = `"${messageToShare}"\n\n${optionsList}\n\nPlaying RugQuest at $${price.toFixed(4)} (${priceChange}). https://2025.sucks #RugQuest`;
       }
 
       if (isInFarcaster) {
