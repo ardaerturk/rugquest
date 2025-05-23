@@ -259,7 +259,7 @@ const RugQuest = () => {
       >
         <h3 className="text-xl font-bold mb-2 text-center">RugQuest - Token Launch Simulator</h3>
         <p className="mb-4 text-sm text-center">Be the shadowy founder of your own memecoin. Rug or moon, fame or prison - it's your choice, ser. 🚀💸</p>
-        <p className="text-xs text-center text-gray-400 mb-4">Built by @ardaa</p>
+        <p className="text-xs text-center text-gray-400 mb-4">Built by @ardaddy</p>
         <div className="flex justify-center">
           <Button onClick={handleToggleAboutModal}>Close</Button>
         </div>

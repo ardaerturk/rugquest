@@ -462,8 +462,9 @@ export function MiniAppProvider({ children }: { children: ReactNode }) {
           // We have a username from either platform, use it
           initializeRugQuest(username);
         } else {
-          // We don't have a username, show input prompt
-          setShowTokenNameInput(true);
+          // We don't have a username, don't auto-initialize the game
+          // The RugQuest component will show the token input form
+          console.log("No username found, skipping auto-initialization");
         }
       }
     };
